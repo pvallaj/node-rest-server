@@ -1,5 +1,7 @@
 require('./config/config');
 
+const mongoose = require('mongoose');
+
 const express = require('express');
 const app = express();
 
@@ -9,30 +11,18 @@ app.use(bodyParser.urlencoded({ extended: false }))
     // parse application/json
 app.use(bodyParser.json())
 
-app.get('/usuario', function(req, resp) {
-    resp.json('GET Usuario');
-});
+app.use(require('./rutas/usuario'));
 
-app.post('/usuario', function(req, resp) {
-    let b = req.body;
-    if (b.nombre === undefined) {
-        resp.status(400).json({
-            ok: false,
-            mensaje: 'Se requiere de un nombre'
-        });
-    } else {
-        resp.json({ b, accion: 'POST' });
-    }
-});
 
-app.put('/usuario/:id', function(req, resp) {
-    let id = req.params.id
-    resp.json({ id });
-});
+mongoose.connect('mongodb://localhost:27017/cafe', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true
+}, (err, resp) => {
+    if (err) throw err;
 
-app.delete('/usuario', function(req, resp) {
-    let b = req.body;
-    resp.json({ b, accion: 'DELETE' });
+    console.log('Base de datos LISTA');
 });
 
 app.listen(process.env.PORT);
