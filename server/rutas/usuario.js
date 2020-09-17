@@ -3,9 +3,34 @@ const Usuario = require('../modelos/usuario');
 const express = require('express');
 const app = express();
 const bc = require('bcrypt');
+const _ = require('underscore');
 
 app.get('/usuario', function(req, resp) {
-    resp.json('GET Usuario');
+
+    let desde = req.query.desde || 0;
+    desde = Number(desde);
+
+    let limite = req.query.limite || 0;
+    limite = Number(limite);
+
+    Usuario.find({ estado: true }, 'nombre email role estado google img')
+        .skip(desde) // se salta los registros
+        .limit(limite) //limite de registros
+        .exec((err, encontrados) => {
+            if (err) {
+                return resp.status(400).json({
+                    ok: false,
+                    err
+                });
+            }
+            Usuario.countDocuments({ estado: true }, (err, conteo) => {
+                resp.json({
+                    ok: true,
+                    encontrados,
+                    numreg: conteo
+                });
+            });
+        })
 });
 
 app.post('/usuario', function(req, resp) {
@@ -26,7 +51,7 @@ app.post('/usuario', function(req, resp) {
             });
         }
 
-        usuarioDB.password = null;
+        //usuarioDB.password = null; No aplica porque se elimina este campo al regresarlo. 
 
         resp.json({
             ok: true,
@@ -38,12 +63,47 @@ app.post('/usuario', function(req, resp) {
 
 app.put('/usuario/:id', function(req, resp) {
     let id = req.params.id
-    resp.json({ id });
+    let b = _.pick(req.body, ['nombre', 'email', 'img', 'role', 'estado']);
+
+    Usuario.findByIdAndUpdate(id, b, { new: true, runValidators: true }, (err, udb) => {
+        if (err) {
+            return resp.status(400).json({
+                ok: false,
+                err
+            });
+        }
+
+        resp.json({
+            ok: true,
+            usuario: udb
+        });
+    });
+
+
+    //resp.json({ id });
+
 });
 
-app.delete('/usuario', function(req, resp) {
-    let b = req.body;
-    resp.json({ b, accion: 'DELETE' });
+app.delete('/usuario/:id', function(req, resp) {
+    let id = req.params.id;
+
+    let cambio = {
+        estado: false
+    }
+
+    Usuario.findByIdAndUpdate(id, cambio, { new: true }, (err, udb) => {
+        if (err) {
+            return resp.status(400).json({
+                ok: false,
+                err
+            });
+        }
+
+        resp.json({
+            ok: true,
+            usuario: udb
+        });
+    });
 });
 
 module.exports = app;
