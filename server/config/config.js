@@ -3,7 +3,7 @@
 //------------------------------------
 //desarrollador01-Zq0JAy7kvnc2Hu2Z
 //conexion a mongoDBAtlas
-//mongodb+srv://<username>:<password>@cluster0.mvo2d.mongodb.net/test
+//mongodb+srv://<username>:<password>@cluster0.mvo2d.mongodb.net/<document>
 //mongodb+srv://desarrollador01:Zq0JAy7kvnc2Hu2Z@cluster0.mvo2d.mongodb.net/test
 process.env.PORT = process.env.PORT || 3000;
 
@@ -17,7 +17,7 @@ if (process.env.NODE_ENV === 'dev') {
     urlDB = 'mongodb://localhost:27017/cafe';
 } else {
     console.log('atlas Mongo DB');
-    urlDB = 'mongodb+srv://desarrollador01:Zq0JAy7kvnc2Hu2Z@cluster0.mvo2d.mongodb.net/test';
+    urlDB = 'mongodb+srv://desarrollador01:Zq0JAy7kvnc2Hu2Z@cluster0.mvo2d.mongodb.net/cafe';
 }
 
 process.env.conDB = urlDB;

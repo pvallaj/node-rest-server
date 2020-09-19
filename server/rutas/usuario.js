@@ -13,7 +13,8 @@ app.get('/usuario', function(req, resp) {
     let limite = req.query.limite || 0;
     limite = Number(limite);
 
-    Usuario.find({ estado: true }, 'nombre email role estado google img')
+    console.log(`Haceindo solicitud ... ${desde} ${limite}`);
+    Usuario.find(null, 'nombre email role estado google img')
         .skip(desde) // se salta los registros
         .limit(limite) //limite de registros
         .exec((err, encontrados) => {
@@ -23,7 +24,7 @@ app.get('/usuario', function(req, resp) {
                     err
                 });
             }
-            Usuario.countDocuments({ estado: true }, (err, conteo) => {
+            Usuario.countDocuments(null, (err, conteo) => {
                 resp.json({
                     ok: true,
                     encontrados,
