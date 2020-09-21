@@ -1,11 +1,12 @@
-const Usuario = require('../modelos/usuario');
-
 const express = require('express');
 const app = express();
 const bc = require('bcrypt');
 const _ = require('underscore');
 
-app.get('/usuario', function(req, resp) {
+const Usuario = require('../modelos/usuario');
+const { verificaToken, verificaAdmin } = require('../middlewares/autenticacion');
+
+app.get('/usuario', verificaToken, (req, resp) => {
 
     let desde = req.query.desde || 0;
     desde = Number(desde);
@@ -14,7 +15,7 @@ app.get('/usuario', function(req, resp) {
     limite = Number(limite);
 
     console.log(`Haceindo solicitud ... ${desde} ${limite}`);
-    Usuario.find(null, 'nombre email role estado google img')
+    Usuario.find({ estado: true }, 'nombre email role estado google img')
         .skip(desde) // se salta los registros
         .limit(limite) //limite de registros
         .exec((err, encontrados) => {
@@ -24,7 +25,7 @@ app.get('/usuario', function(req, resp) {
                     err
                 });
             }
-            Usuario.countDocuments(null, (err, conteo) => {
+            Usuario.countDocuments({ estado: true }, (err, conteo) => {
                 resp.json({
                     ok: true,
                     encontrados,
@@ -34,7 +35,7 @@ app.get('/usuario', function(req, resp) {
         })
 });
 
-app.post('/usuario', function(req, resp) {
+app.post('/usuario', [verificaToken, verificaAdmin], (req, resp) => {
     let b = req.body;
 
     let usr = new Usuario({
@@ -62,30 +63,38 @@ app.post('/usuario', function(req, resp) {
 
 });
 
-app.put('/usuario/:id', function(req, resp) {
+app.put('/usuario/:id', [verificaToken, verificaAdmin], (req, resp) => {
     let id = req.params.id
     let b = _.pick(req.body, ['nombre', 'email', 'img', 'role', 'estado']);
 
-    Usuario.findByIdAndUpdate(id, b, { new: true, runValidators: true }, (err, udb) => {
-        if (err) {
-            return resp.status(400).json({
-                ok: false,
-                err
-            });
-        }
 
-        resp.json({
-            ok: true,
-            usuario: udb
+    Usuario.findByIdAndUpdate(id, b, {
+            new: true,
+            runValidators: true,
+            setDefaultsOnInsert: true,
+            upsert: true,
+            context: 'query'
+        },
+        (err, udb) => {
+            if (err) {
+                return resp.status(400).json({
+                    ok: false,
+                    err
+                });
+            }
+
+            resp.json({
+                ok: true,
+                usuario: udb
+            });
         });
-    });
 
 
     //resp.json({ id });
 
 });
 
-app.delete('/usuario/:id', function(req, resp) {
+app.delete('/usuario/:id', [verificaToken, verificaAdmin], (req, resp) => {
     let id = req.params.id;
 
     let cambio = {
@@ -106,5 +115,6 @@ app.delete('/usuario/:id', function(req, resp) {
         });
     });
 });
+
 
 module.exports = app;
